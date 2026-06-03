@@ -32,21 +32,21 @@ class _MenuState extends State<Menu> {
   void order(List<Categ>data){if(cart.isEmpty){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(widget.lang,'select_first')),duration: Duration(seconds: 1),));return;}final menuItems=data.expand((cat)=>cat.menuItems).toList();Navigator.push(context,MaterialPageRoute(builder: (context)=>Cout(cart: cart,qty: qty,total: total(),lang: widget.lang,menuItems: menuItems)));}
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(automaticallyImplyLeading: true,title: Column(crossAxisAlignment: CrossAxisAlignment.start,children: [Text(tr(widget.lang,'pickup'), style: TextStyle(color: Color.fromARGB(255, 0, 107, 46),fontSize: 18,fontWeight: FontWeight.bold),)],),),
-      body: FutureBuilder<List<Categ>>(future: categs, builder: (context,snapshot){if(snapshot.connectionState==ConnectionState.waiting){return const Center(child: CircularProgressIndicator(),);}if(snapshot.hasError){return Center(child: Text('error: ${snapshot.error}'),);}
+    return Scaffold(
+      body: SafeArea(child: FutureBuilder<List<Categ>>(future: categs, builder: (context,snapshot){if(snapshot.connectionState==ConnectionState.waiting){return const Center(child: CircularProgressIndicator(),);}if(snapshot.hasError){return Center(child: Text('error: ${snapshot.error}'),);}
       final data=snapshot.data??[]; if(sel>=data.length){sel=0;} final items=data.isNotEmpty?data[sel].menuItems:[]; final shown=q.isEmpty?items:items.where((item)=>item.name.toLowerCase().contains(q.toLowerCase())).toList();
       return Column(children: [
-        Padding(padding: EdgeInsets.fromLTRB(20, 50, 20, 16),child: Column(crossAxisAlignment: CrossAxisAlignment.start,children: [
-          Text(tr(widget.lang,'menu_title'), style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold),),SizedBox(height: 28,),
+        Padding(padding: EdgeInsets.fromLTRB(20, 10, 20, 16),child: Column(crossAxisAlignment: CrossAxisAlignment.start,children: [
+          Text(tr(widget.lang,'menu_title'), style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold),),SizedBox(height: 14,),
           if(search)TextField(controller: sctrl,autofocus: true,onChanged: (value){setState((){q=value;});},decoration: InputDecoration(hintText: tr(widget.lang,'search_menu'),suffixIcon: IconButton(icon: Icon(Icons.close),onPressed: (){setState((){search=false;q='';sctrl.clear();});}),),),if(search)SizedBox(height: 18,),
-          SizedBox(height: 45,child:ListView(scrollDirection: Axis.horizontal,children: [InkWell(onTap: (){setState((){search=true;});},child: Icon(Icons.search,size: 34,)),SizedBox(width: 25,),InkWell(onTap: (){cats(data);},child: Icon(Icons.list,size: 34,)),SizedBox(width: 25,),
-          ...data.asMap().entries.map((entry){final i=entry.key; final cat=entry.value; return Padding(padding: EdgeInsets.only(right: 28),child: InkWell(onTap: (){setState((){sel=i;});},child: Text(cat.name,style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: sel==i?Color.fromARGB(255,0,107, 64):Colors.grey),),),);}),
+          SizedBox(height: 45,child:ListView(scrollDirection: Axis.horizontal,children: [SizedBox(width: 42,height: 45,child: Center(child: InkWell(onTap: (){setState((){search=true;});},child: Icon(Icons.search,size: 34),),),),SizedBox(width: 18,),SizedBox(width: 42,height: 45,child: Center(child: InkWell(onTap: (){cats(data);},child: Icon(Icons.list,size: 34),),),),SizedBox(width: 18,),
+          ...data.asMap().entries.map((entry){final i=entry.key; final cat=entry.value; return Padding(padding: EdgeInsets.only(right: 28),child: Center(child: InkWell(onTap: (){setState((){sel=i;});},child: Text(cat.name,style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: sel==i?Color.fromARGB(255,0,107, 64):Colors.grey),),),),);}),
           ],),)
         ],),),Divider(height: 1,), Expanded(child: shown.isEmpty?Center(child: Text(tr(widget.lang,'no_items'),)):GridView.builder(padding:EdgeInsets.all(18), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2,childAspectRatio: .72,crossAxisSpacing: 20,mainAxisSpacing: 25),itemCount: shown.length ,itemBuilder: (context,index)
           {final item=shown[index]; return InkWell(onTap: (){pick(item);},child: Column(crossAxisAlignment: CrossAxisAlignment.start,children: [Expanded(child: Container(color: Colors.grey.shade200,child:Stack(children:[Center(child: Image.asset(menuImage(item.name),fit: BoxFit.contain,errorBuilder: (context,error,stack){return Image.asset('assets/inasal.png',fit: BoxFit.contain);},)),if(qty[item.id]!=null)Positioned(right: 6,top: 6,child: CircleAvatar(radius: 14,backgroundColor: Color.fromARGB(255,0,107,46),child: Text('${qty[item.id]}',style: TextStyle(color: Colors.white,fontSize: 13,fontWeight: FontWeight.bold),),),)],) ,)),SizedBox(height: 10,),Text(item.name,maxLines: 2,overflow: TextOverflow.ellipsis,style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),Text('\u20B1${item.basep}',style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 0, 107, 46),fontWeight: FontWeight.bold),)],));})),
           Padding(padding:EdgeInsets.all(18),child: SizedBox(width: double.infinity,height: 58,child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Color.fromARGB(255, 0, 150, 55),foregroundColor: Colors.white,shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),onPressed: (){order(data);}, child: Text(cart.isEmpty?tr(widget.lang,'order_now'):'${tr(widget.lang,'order_now')} (${tq()}) - \u20B1${total().toStringAsFixed(2)}',style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold),)),),)
       ],); 
-      })
+      }),)
     );
   }
 }

@@ -14,16 +14,21 @@ class Ewallet extends StatefulWidget {
 
 class _EwalletState extends State<Ewallet> {
   String platform='GCash';
+  String dial='+63';
   final sender=TextEditingController();
   final mobile=TextEditingController();
   final amount=TextEditingController();
   bool loading=false;
   final platforms=['GCash','Maya','ShopeePay','GrabPay'];
+  final dials=['+63','+1','+44','+81','+82','+65','+971'];
   @override void initState(){super.initState();amount.text=due().toStringAsFixed(2);}
   @override void dispose(){sender.dispose();mobile.dispose();amount.dispose();super.dispose();}
   double due(){return double.tryParse(widget.order['total_amount'].toString())??0;}
-  Future<void> pay()async{final a=double.tryParse(amount.text)??0;if(sender.text.trim().isEmpty||mobile.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(widget.lang,'fill_details')),));return;}if(a<due()){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(widget.lang,'amount_low')),));return;}setState((){loading=true;});
-  try{final data=await apise().payOrder(widget.order['id'],'gcash',a,provider: platform,transaction: '${sender.text.trim()} - ${mobile.text.trim()}');if(!mounted)return;Navigator.pushReplacement(context,MaterialPageRoute(builder: (context)=>Receipt(order: data,paid: true,lang: widget.lang)));}catch(e){if(!mounted)return;ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ','')),));}finally{if(mounted){setState((){loading=false;});}}}
+  String digits(){return mobile.text.replaceAll(RegExp(r'[^0-9]'),'');}
+  String phone(){return '$dial${digits()}';}
+  bool validPhone(){final d=digits();return d.length>=7&&d.length<=15;}
+  Future<void> pay()async{final a=double.tryParse(amount.text)??0;if(sender.text.trim().isEmpty||mobile.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(widget.lang,'fill_details')),));return;}if(!validPhone()){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(widget.lang,'invalid_phone')),));return;}if(a<due()){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(widget.lang,'amount_low')),));return;}setState((){loading=true;});
+  try{final data=await apise().payOrder(widget.order['id'],'gcash',a,provider: platform,transaction: '${sender.text.trim()} - ${phone()}');if(!mounted)return;Navigator.pushReplacement(context,MaterialPageRoute(builder: (context)=>Receipt(order: data,paid: true,lang: widget.lang)));}catch(e){if(!mounted)return;ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ','')),));}finally{if(mounted){setState((){loading=false;});}}}
   @override
   Widget build(BuildContext context) {
     return Scaffold(appBar: AppBar(title: Text(tr(widget.lang,'ewallet')),),
@@ -38,7 +43,7 @@ class _EwalletState extends State<Ewallet> {
         SizedBox(height: 18,),
         TextField(controller: sender,decoration: InputDecoration(labelText: tr(widget.lang,'sender_name'),border: OutlineInputBorder(),),),
         SizedBox(height: 14,),
-        TextField(controller: mobile,keyboardType: TextInputType.phone,decoration: InputDecoration(labelText: tr(widget.lang,'mobile_number'),border: OutlineInputBorder(),),),
+        Row(children: [SizedBox(width: 112,child: DropdownButtonFormField<String>(initialValue: dial,decoration: InputDecoration(border: OutlineInputBorder(),),items: dials.map((d)=>DropdownMenuItem(value: d,child: Text(d),)).toList(),onChanged: (v){setState((){dial=v??'+63';});},),),SizedBox(width: 10,),Expanded(child: TextField(controller: mobile,keyboardType: TextInputType.phone,decoration: InputDecoration(labelText: tr(widget.lang,'mobile_number'),border: OutlineInputBorder(),),),),],),
         SizedBox(height: 14,),
         TextField(controller: amount,keyboardType: TextInputType.numberWithOptions(decimal: true),decoration: InputDecoration(labelText: tr(widget.lang,'amount_send'),border: OutlineInputBorder(),prefixText: '\u20B1 ',),),
         SizedBox(height: 24,),
