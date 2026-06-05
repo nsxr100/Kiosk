@@ -27,6 +27,9 @@ class MenuItemsTable
                 TextColumn::make('base_price')
                     ->money('PHP')
                     ->sortable(),
+                TextColumn::make('order')
+                    ->numeric()
+                    ->sortable(),
                 IconColumn::make('is_active')
                     ->boolean(),
                 TextColumn::make('created_at')
